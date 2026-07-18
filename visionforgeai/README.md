@@ -201,3 +201,37 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 - Inspired by the need for a flexible, provider-agnostic AI workflow platform
 - Built with thanks to the open-source AI provider communities
+## Project Status
+
+### ✅ Completed
+- Provider-agnostic LLM abstraction (base LLMProvider, OpenAI, Anthropic, Mock)
+- Factory pattern for dynamic provider selection
+- Service layer (LLMService) handling business logic
+- FastAPI application setup with lifespan events, middleware, global error handling
+- Core API endpoints:
+  - `POST /api/v1/llm/generate` (text generation)
+  - `POST /api/v1/llm/generate/stream` (streaming via SSE)
+  - `GET /api/v1/llm/models` (list available models)
+  - `GET /api/v1/llm/health` (provider health check)
+  - `GET /` (root info)
+  - `GET /health` (application health)
+- Dependency injection via `get_settings()` and `get_llm_service()`
+- Configuration management using Pydantic Settings with provider‑specific API keys
+- Mock LLM provider enabling zero‑cost local testing (returns `[MOCK] <prompt>`)
+- Fixed import structure; package can be imported as `visionforgeai`
+- Basic directory scaffolding for future providers (image, video, audio) and workflows
+
+### 🚧 In Progress / Pending
+- Implement image, video, and audio providers (Stability AI, Replicate, etc.)
+- Add authentication & role‑based access control (JWT/OAuth2)
+- Implement refresh token flow and user management API
+- Add database models and Alembic migrations for persistent storage (users, jobs, results)
+- Integrate Celery (or RQ) for long‑running asynchronous jobs (video rendering, etc.)
+- Write comprehensive unit & integration tests (target >80% coverage)
+- Add OpenAPI/WebSocket support for real‑time job status updates
+- Configure CI/CD pipeline (GitHub Actions) with linting, testing, and container builds
+- Create Dockerfile and docker‑compose.yml for local development
+- Implement request/response logging and structured audit trails
+- Add rate limiting and endpoint throttling
+- Provide example front‑end (React/Vue) or API consumer documentation
+

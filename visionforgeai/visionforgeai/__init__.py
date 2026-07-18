@@ -1,33 +1,34 @@
-"""VisionForge AI Package Initialization.
+"""VisionForge AI - AI Workflow Engine.
 
-This is the main package for VisionForge AI - an AI Workflow Engine.
+This package implements a production-ready AI Workflow Platform capable of
+generating various types of content including text, images, video, audio, and more.
+
+The architecture follows Clean Architecture principles with:
+- Provider abstraction layer (swap AI providers without changing business logic)
+- Service layer (business logic)
+- Repository layer (data persistence)
+- API layer (FastAPI endpoints)
+- Workflow orchestration
 """
 
-import os
-import sys
-from pathlib import Path
-
-# Package metadata
-__title__ = "VisionForge AI"
-__description__ = "AI Workflow Engine for generating videos, images, text, and more"
 __version__ = "0.1.0"
 __author__ = "VisionForge AI Team"
-__author_email__ = "dev@visionforge.ai"
-__license__ = "MIT"
-__copyright__ = "Copyright 2026 VisionForge AI"
+__email__ = "dev@visionforge.ai"
+__description__ = "AI Workflow Engine for generating multimodal content"
 
-# Ensure the package directory is in Python path
-PACKAGE_DIR = Path(__file__).parent
-if str(PACKAGE_DIR) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_DIR))
+# Make key components easily accessible
+from .main import app
+from .config.settings import get_settings, Settings
+from .services.llm_service import get_llm_service, LLMService
 
-# Export public interface
 __all__ = [
-    "__title__",
-    "__description__",
+    "app",
+    "get_settings",
+    "Settings",
+    "get_llm_service",
+    "LLMService",
     "__version__",
     "__author__",
-    "__author_email__",
-    "__license__",
-    "__copyright__"
+    "__email__",
+    "__description__"
 ]
