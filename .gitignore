@@ -94,3 +94,6 @@ Thumbs.db
 # Keep the example environment file
 !.env.example
 
+# Large model files - download separately
+models/*.gguf
+models/*

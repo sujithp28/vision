@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionForge AI - Video Planner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+
+        .result h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+            margin-top: 20px;
+        }
+
+        .prompt-used, .model-used {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VisionForge AI Video Planner</h1>
+        <p>Create educational video plans using AI assistance</p>
+
+        <form id="videoPlannerForm">
+            <div class="form-group">
+                <label for="prompt">Video Topic/Idea:</label>
+                <textarea id="prompt" placeholder="Enter your video topic or idea (e.g., 'How plants make food through photosynthesis')" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="target_audience">Target Audience (optional):</label>
+                <input type="text" id="target_audience" placeholder="e.g., 'children aged 8-12' or 'high school students'">
+            </div>
+
+            <div class="form-group">
+                <label for="video_length">Video Length (minutes) (optional):</label>
+                <input type="number" id="video_length" min="1" max="60" placeholder="e.g., 5">
+            </div>
+
+            <div class="form-group">
+                <label for="educational_goal">Educational Goal (optional):</label>
+                <input type="text" id="educational_goal" placeholder="e.g., 'Understand the process of photosynthesis'">
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" id="include_activities"> Include suggested activities</label>
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" id="include_assessment"> Include assessment ideas</label>
+            </div>
+
+            <button type="submit" id="submitBtn">Generate Video Plan</button>
+        </form>
+
+        <div id="result" class="result" style="display: none;">
+            <h2>Generated Video Plan</h2>
+            <div id="videoPlan"></div>
+            <div class="prompt-used" id="promptUsed"></div>
+            <div class="model-used" id="modelUsed"></div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Generating your video plan... Please wait.
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('videoPlannerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Get form values
+            const prompt = document.getElementById('prompt').value.trim();
+            const targetAudience = document.getElementById('target_audience').value.trim() || null;
+            const videoLength = document.getElementById('video_length').value ? parseInt(document.getElementById('video_length').value) : null;
+            const educationalGoal = document.getElementById('educational_goal').value.trim() || null;
+            const includeActivities = document.getElementById('include_activities').checked;
+            const includeAssessment = document.getElementById('include_assessment').checked;
+
+            // Validate
+            if (!prompt) {
+                showError('Please enter a video topic or idea');
+                return;
+            }
+
+            // Show loading state
+            showLoading();
+            hideResults();
+            hideError();
+
+            // Disable button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Generating...';
+
+            try {
+                // Prepare request data
+                const requestData = {
+                    prompt: prompt,
+                    target_audience: targetAudience,
+                    video_length: videoLength,
+                    educational_goal: educationalGoal,
+                    include_activities: includeActivities,
+                    include_assessment: includeAssessment
+                };
+
+                // Call the API
+                const response = await fetch('/api/v1/video/planner/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display results
+                displayResult(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to generate video plan. Please try again.');
+            } finally {
+                // Hide loading and re-enable button
+                hideLoading();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Generate Video Plan';
+            }
+        });
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function hideResults() {
+            document.getElementById('result').style.display = 'none';
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const videoPlanDiv = document.getElementById('videoPlan');
+            const promptUsedDiv = document.getElementById('promptUsed');
+            const modelUsedDiv = document.getElementById('modelUsed');
+
+            videoPlanDiv.innerHTML = marked.parse(data.video_plan);
+            promptUsedDiv.textContent = `Prompt used: ${data.prompt_used.substring(0, 100)}...`;
+            modelUsedDiv.textContent = `Model used: ${data.model_used}`;
+
+            resultDiv.style.display = 'block';
+        }
+    </script>
+    <!-- Include marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</body>
+</html>

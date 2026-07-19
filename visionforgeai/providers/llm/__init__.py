@@ -9,14 +9,15 @@ from typing import Any
 from .base import LLMProvider
 from .openai import OpenAIProvider
 from .anthropic import AnthropicProvider
+from .local import LocalLLMProvider
 
 
 def get_provider(provider_name: str, api_key: str, **kwargs: Any) -> LLMProvider:
     """Factory function to get an LLM provider instance.
 
     Args:
-        provider_name: Name of the provider ("openai", "anthropic", "mock")
-        api_key: API key for the provider
+        provider_name: Name of the provider ("openai", "anthropic", "mock", "local")
+        api_key: API key for the provider (ignored for local provider)
         **kwargs: Additional provider-specific configuration
 
     Returns:
@@ -34,6 +35,12 @@ def get_provider(provider_name: str, api_key: str, **kwargs: Any) -> LLMProvider
         from visionforgeai.providers.llm_mock import get_provider as get_mock_provider
 
         return get_mock_provider(provider_name, api_key, **kwargs)
+    elif provider_name == "local":
+        # For local provider, we expect model_path in kwargs
+        model_path = kwargs.pop("model_path", None)
+        if model_path is None:
+            raise ValueError("model_path must be provided for local provider")
+        return LocalLLMProvider(model_path, **kwargs)
     else:
         raise ValueError(f"Unsupported provider: {provider_name}")
 

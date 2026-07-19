@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import time
+from fastapi.staticfiles import StaticFiles
 
 from .config.settings import get_settings, validate_required_settings
 from .services.llm_service import get_llm_service
@@ -169,27 +170,16 @@ async def health_check():
         )
 
 
-# Root endpoint
-@app.get("/", tags=["root"])
-async def root():
-    """Root endpoint with basic API information.
-
-    Returns:
-        dict: Welcome message and API information
-    """
-    return {
-        "message": f"Welcome to {settings.app_name}",
-        "version": settings.app_version,
-        "docs": "/docs",
-        "health": "/health",
-        "api_v1": "/api/v1",
-    }
+# Mount static files
 
 
 # Include API routers
 app.include_router(llm_router, prefix="/api/v1", tags=["llm"])
+from .api.routes.videos.planner import router as video_planner_router
+app.include_router(video_planner_router, prefix="/api/v1", tags=["video-planning"])
 
 # Additional routers would be included here as they are implemented
+app.mount("/", StaticFiles(directory="public", html=True), name="static")
 # from .api.routes.auth import router as auth_router
 # app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 # from .api.routes.users import router as users_router

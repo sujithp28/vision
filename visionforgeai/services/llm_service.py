@@ -44,11 +44,14 @@ class LLMService:
             api_key = self.settings.openai_api_key or self.settings.llm_api_key
         elif partner_name == "anthropic":
             api_key = self.settings.anthropic_api_key or self.settings.llm_api_key
+        elif partner_name == "local":
+            # For local provider, we don't need an API key, but the factory function requires one
+            api_key = ""  # dummy value
         else:
             # For other providers or generic API key
             api_key = self.settings.llm_api_key
 
-        if not api_key:
+        if not api_key and partner_name != "local":
             raise RuntimeError(
                 f"No API key found for provider '{partner_name}'. "
                 f"Please set the appropriate API key in your environment variables."
@@ -62,6 +65,8 @@ class LLMService:
                 model=self.settings.llm_model,
                 temperature=self.settings.llm_temperature,
                 max_tokens=self.settings.llm_max_tokens,
+                # Pass local model path for local provider
+                **({"model_path": self.settings.local_model_path} if partner_name == "local" else {})
             )
             self._provider_name = partner_name
             logger.info(f"Initialized LLM provider: {partner_name}")

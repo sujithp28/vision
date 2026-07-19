@@ -5,8 +5,9 @@ environment variables, .env files, and default values. It provides a
 centralized, type-safe way to access configuration throughout the application.
 """
 
+import os
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,10 +35,10 @@ class Settings(BaseSettings):
 
     # LLM Settings
     llm_provider: str = Field(
-        default="openai", description="LLM provider (openai, anthropic, ollama, etc.)"
+        default="openai", description="LLM provider (openai, anthropic, local, etc.)"
     )
     llm_api_key: Optional[str] = Field(
-        default=None, description="API key for the LLM provider"
+        default=None, description="API key for the LLM provider (if not using provider-specific key)"
     )
     llm_model: str = Field(default="gpt-4o-mini", description="Default LLM model")
     llm_max_tokens: int = Field(
@@ -45,6 +46,11 @@ class Settings(BaseSettings):
     )
     llm_temperature: float = Field(
         default=0.7, description="Default temperature for LLM sampling"
+    )
+    # Local model path
+    local_model_path: str = Field(
+        default="./models/phi-3-mini-4k-instruct.q4_k_m.gguf",
+        description="Path to the local LLM model file (used when llm_provider is 'local')"
     )
     llm_extra_config: dict = Field(
         default_factory=dict, description="Additional provider-specific configuration"
@@ -120,6 +126,18 @@ class Settings(BaseSettings):
     # CORS Settings
     cors_origins: List[str] = Field(default=["*"], description="Allowed CORS origins")
 
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        """Parse CORS origins from string or list."""
+        if isinstance(v, str):
+            # Handle comma-separated string or single value
+            if "," in v:
+                return [origin.strip() for origin in v.split(",")]
+            else:
+                return [v.strip()]
+        return v  # Already a list
+
     # External Service APIs
     openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
     anthropic_api_key: Optional[str] = Field(
@@ -192,7 +210,7 @@ def validate_required_settings() -> List[str]:
     settings = get_settings()
     missing = []
 
-    # Check for required API keys based on provider
+    # Check for required API keys or model paths based on provider
     provider = settings.llm_provider.lower()
     if (
         provider == "openai"
@@ -206,6 +224,10 @@ def validate_required_settings() -> List[str]:
         and not settings.llm_api_key
     ):
         missing.append("ANTHROPIC_API_KEY or LLM_API_KEY")
+    elif provider == "local":
+        # Check if the model file exists
+        if not os.path.isfile(settings.local_model_path):
+            missing.append(f"Local model file not found: {settings.local_model_path}")
     # Add more provider-specific checks as needed
 
     # Always check for secret key in production
