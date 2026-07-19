@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+skip-string-normalization = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "N"]
+ignore = [
+    "E501",     # line too long (handled by Black)
+    "E203",     # whitespace before ':' (black handles this differently)
+    "N806",     # constant in camelCase (we'll allow it for now)
+]
+per-file-ignores = { "__init__.py" = ["F401"] }
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = false
+ignore_missing_imports = true
+follow_imports = "silent"
+show_error_codes = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = false
+files = ["visionforgeai/"]
