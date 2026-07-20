@@ -131,18 +131,15 @@ def build_prompt(request: VideoPlannerRequest) -> str:
     else:  # general
         additional_context = ""
         if request.target_audience:
-            additional_content += f"Target audience: {request.target_audience}\n"
+            additional_context += f"Target audience: {request.target_audience}\n"
         if request.video_length:
-            additional_content += f"Desired length: {request.video_length} minutes\n"
+            additional_context += f"Desired length: {request.video_length} minutes\n"
         if request.educational_goal:
-            additional_content += f"Educational goal: {request.educational_goal}\n"
+            additional_context += f"Educational goal: {request.educational_goal}\n"
         if request.include_activities:
-            additional_content += "Include suggestions for hands-on activities\n"
+            additional_context += "Include suggestions for hands-on activities\n"
         if request.include_assessment:
-            additional_content += "Include ideas for assessment or knowledge checks\n"
-
-        # Fix the variable name - it should be additional_context, not additional_content
-        # Actually, let's rewrite this part correctly
+            additional_context += "Include ideas for assessment or knowledge checks\n"
         additional_context = ""
         if request.target_audience:
             additional_context += f"Target audience: {request.target_audience}\n"
