@@ -4,6 +4,7 @@ This module provides a concrete implementation of the LLMProvider interface
 for local LLM inference using llama.cpp Python bindings.
 """
 
+import asyncio
 import os
 from typing import Any, AsyncGenerator, List, Optional
 
@@ -72,8 +73,9 @@ class LocalLLMProvider(LLMProvider):
         repeat_penalty = kwargs.get('repeat_penalty', self.repeat_penalty)
 
         try:
-            # Generate response
-            response = self.model(
+            # Wrap synchronous llama.cpp call with asyncio.to_thread to avoid blocking
+            response = await asyncio.to_thread(
+                self.model,
                 prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
